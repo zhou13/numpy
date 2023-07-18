@@ -14,6 +14,36 @@
 #include "numpy/npy_math.h"
 #include "numpy/utils.h"
 
+#include <chrono>
+#include <ctime>
+#include <iomanip>
+#include <iostream>
+
+std::string
+getCurrentTimestamp()
+{
+    // Get the current system time
+    auto now = std::chrono::system_clock::now();
+    std::time_t now_time = std::chrono::system_clock::to_time_t(now);
+    std::chrono::milliseconds milliseconds =
+            std::chrono::duration_cast<std::chrono::milliseconds>(
+                    now.time_since_epoch());
+
+    // Convert to a local time
+    struct std::tm local_tm;
+    localtime_r(&now_time, &local_tm);
+
+    // Format the timestamp as a string
+    char buffer[50];
+    std::snprintf(buffer, sizeof(buffer),
+                  "[%04d-%02d-%02d %02d:%02d:%02d,%03lld]",
+                  local_tm.tm_year + 1900, local_tm.tm_mon + 1,
+                  local_tm.tm_mday, local_tm.tm_hour, local_tm.tm_min,
+                  local_tm.tm_sec, milliseconds.count() % 1000);
+
+    return std::string(buffer);
+}
+
 #include "fast_loop_macros.h"
 
 #include "../common/numpy_tag.h"
@@ -117,6 +147,12 @@ static void
 _npy_clip_(T **args, npy_intp const *dimensions, npy_intp const *steps)
 {
     npy_intp n = dimensions[0];
+
+    if (n >= 1600 * 1600 * 3)
+        std::cout << getCurrentTimestamp()
+                  << " _npy_clip_ starts with n = " << n << " step = ("
+                  << steps[0] << ", " << steps[1] << ", " << steps[2] << ")\n";
+
     if (steps[1] == 0 && steps[2] == 0) {
         /* min and max are constant throughout the loop, the most common case
          */
@@ -147,6 +183,10 @@ _npy_clip_(T **args, npy_intp const *dimensions, npy_intp const *steps)
              i++, ip1 += is1, ip2 += is2, ip3 += is3, op1 += os1)
             *op1 = _NPY_CLIP<Tag>(*ip1, *ip2, *ip3);
     }
+
+    if (n >= 1600 * 1600 * 3)
+        std::cout << getCurrentTimestamp() << " _npy_clip_ ends" << std::endl;
+
     npy_clear_floatstatus_barrier((char *)dimensions);
 }
 
