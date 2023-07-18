@@ -151,7 +151,7 @@ _npy_clip_(T **args, npy_intp const *dimensions, npy_intp const *steps)
     if (n >= 1600 * 1600 * 3)
         std::cout << getCurrentTimestamp()
                   << " _npy_clip_ starts with n = " << n << " step = ("
-                  << steps[0] << ", " << steps[1] << ", " << steps[2] << ")\n";
+                  << steps[0] << ", " << steps[1] << ", " << steps[2] << ")" << std::endl;
 
     if (steps[1] == 0 && steps[2] == 0) {
         /* min and max are constant throughout the loop, the most common case
